@@ -1,0 +1,17 @@
+# Source & dev files
+src/
+tests/
+tsconfig.json
+bun.lock
+
+# Editor / tooling
+.claude/
+.cursor/
+.vscode/
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
