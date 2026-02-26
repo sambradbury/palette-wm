@@ -1,6 +1,6 @@
 {
   "name": "palette-wm",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Lightweight CLI for managing multi-repo projects using git worktrees",
   "type": "module",
   "license": "MIT",
