@@ -1,6 +1,6 @@
 {
   "name": "palette-wm",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Lightweight CLI for managing multi-repo projects using git worktrees",
   "type": "module",
   "license": "MIT",
@@ -26,7 +26,7 @@
     "pal": "./dist/cli.js"
   },
   "scripts": {
-    "build": "bun build src/cli.ts --outdir dist --target node --format esm && sed '1{/^#!.*bun/d;}' dist/cli.js > dist/cli.js.tmp && printf '#!/usr/bin/env node\n' | cat - dist/cli.js.tmp > dist/cli.js && rm dist/cli.js.tmp",
+    "build": "bun build src/cli.ts --outdir dist --target node --format esm && sed '1{/^#!.*bun/d;}' dist/cli.js > dist/cli.js.tmp && printf '#!/usr/bin/env node\n' | cat - dist/cli.js.tmp > dist/cli.js && rm dist/cli.js.tmp && chmod +x dist/cli.js",
     "prepublishOnly": "bun run build",
     "dev": "bun run src/cli.ts",
     "typecheck": "tsc --noEmit",

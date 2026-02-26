@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { createRequire } from "node:module";
 import { Command } from "commander";
 import { initCommand } from "./commands/init.js";
 import { addCommand } from "./commands/add.js";
@@ -10,12 +11,15 @@ import { deleteCommand } from "./commands/delete.js";
 import { syncCommand } from "./commands/sync.js";
 import { saveCommand } from "./commands/save.js";
 
+const require = createRequire(import.meta.url);
+const { version } = require("../package.json");
+
 const program = new Command();
 
 program
   .name("palette")
   .description("Manage multi-repo projects using git worktrees")
-  .version("0.1.0");
+  .version(version);
 
 program
   .command("init <name>")
