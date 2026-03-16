@@ -90,7 +90,7 @@ program
 
 program
   .command("config [subcommand] [key] [value]")
-  .description("Manage palette settings (e.g. palette config set base-dir ~/code)")
+  .description("Manage palette settings (e.g. palette config set base-dir ~/code, palette config set copy .env)")
   .action(configCommand);
 
 program.parse();

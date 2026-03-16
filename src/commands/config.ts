@@ -52,13 +52,64 @@ export function configCommand(subcommand?: string, key?: string, value?: string)
       settings.base_dir = resolved;
       writeSettings(settings);
       console.log(`Set base-dir to ${resolved}`);
-
       linkPaletteIntoBaseDir(resolved);
       return;
     }
 
+    if (key === "copy") {
+      if (!value) {
+        console.error("Usage: palette config set copy <pattern>");
+        process.exit(1);
+      }
+      const settings = readSettings();
+      const existing = settings.copy ?? [];
+      if (existing.includes(value)) {
+        console.log(`Pattern already in copy list: ${value}`);
+        return;
+      }
+      settings.copy = [...existing, value];
+      writeSettings(settings);
+      console.log(`Added copy pattern: ${value}`);
+      return;
+    }
+
+    if (key === "install") {
+      if (value !== "true" && value !== "false") {
+        console.error("Usage: palette config set install <true|false>");
+        process.exit(1);
+      }
+      const settings = readSettings();
+      settings.install = value === "true";
+      writeSettings(settings);
+      console.log(`Set install to ${settings.install}`);
+      return;
+    }
+
     console.error(`Unknown key: ${key}`);
-    console.error("Available keys: base-dir");
+    console.error("Available keys: base-dir, copy, install");
+    process.exit(1);
+  }
+
+  if (subcommand === "unset") {
+    if (key === "copy") {
+      if (!value) {
+        console.error("Usage: palette config unset copy <pattern>");
+        process.exit(1);
+      }
+      const settings = readSettings();
+      const existing = settings.copy ?? [];
+      if (!existing.includes(value)) {
+        console.error(`Pattern not in copy list: ${value}`);
+        process.exit(1);
+      }
+      settings.copy = existing.filter((p) => p !== value);
+      writeSettings(settings);
+      console.log(`Removed copy pattern: ${value}`);
+      return;
+    }
+
+    console.error(`Unknown key: ${key}`);
+    console.error("Available keys: copy");
     process.exit(1);
   }
 

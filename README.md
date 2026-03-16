@@ -188,11 +188,23 @@ palette from api-redesign.palette.yaml --base-dir ~/code
 # Set the default directory where repos are cloned when using `palette from`
 palette config set base-dir ~/code
 
+# Copy files matching a pattern into each new worktree (run multiple times to add more)
+palette config set copy .env
+palette config set copy .env.local
+
+# Remove a copy pattern
+palette config unset copy .env.local
+
+# Automatically run the package manager install after creating a worktree
+palette config set install true
+
 # View current settings
 palette config
 ```
 
 Settings are stored at `~/palette/.settings.yaml`.
+
+Copy patterns are matched against files in the origin repo directory. Glob-style wildcards are supported (e.g. `.env*`, `*.local`). Files are only copied if they don't already exist in the worktree.
 
 ### Project config
 
