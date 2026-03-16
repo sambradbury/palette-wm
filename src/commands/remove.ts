@@ -19,12 +19,10 @@ export function removeCommand(projectName: string, repoName: string, options: Re
 
   const projectDir = getProjectDir(projectName);
   const worktreePath = join(projectDir, repoName);
-  const { origin } = config.repos[repoName];
-
   if (existsSync(worktreePath)) {
     console.log(`Removing worktree at ${worktreePath}...`);
     try {
-      removeWorktree(origin, worktreePath, options.force);
+      removeWorktree(worktreePath, options.force);
     } catch (err) {
       if (!options.force) {
         console.error(`Failed to remove worktree. If it has uncommitted changes, use --force.`);

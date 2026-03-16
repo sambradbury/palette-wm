@@ -25,8 +25,15 @@ export function listCommand(): void {
     try {
       const config = readConfig(name);
       const repoCount = Object.keys(config.repos).length;
-      const repos = Object.keys(config.repos).join(", ") || "(no repos)";
-      console.log(`  ${name.padEnd(20)} ${repoCount} repo${repoCount !== 1 ? "s" : ""}  [${repos}]`);
+      if (repoCount === 0) {
+        console.log(`  ${name.padEnd(20)} (no repos)`);
+      } else {
+        console.log(`  ${name.padEnd(20)} ${repoCount} repo${repoCount !== 1 ? "s" : ""}`);
+        const sortedRepos = Object.keys(config.repos).sort();
+        for (const repoName of sortedRepos) {
+          console.log(`    - ${repoName}`);
+        }
+      }
     } catch {
       console.log(`  ${name.padEnd(20)} (invalid config)`);
     }

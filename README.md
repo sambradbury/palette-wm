@@ -136,7 +136,65 @@ palette delete api-redesign --force  # ignore uncommitted changes
 palette list
 ```
 
+---
+
+## Sharing projects
+
+### Export a project as a portable template
+
+Generates a `.palette.yaml` template with git remote URLs instead of local paths, so anyone can recreate the project on their own machine:
+
+```bash
+palette export api-redesign
+# writes ./api-redesign.palette.yaml
+
+palette export api-redesign ~/shared/api-redesign.palette.yaml
+```
+
+The exported file looks like:
+
+```yaml
+name: api-redesign
+repos:
+  backend:
+    origin: https://github.com/org/backend.git
+    branch: feature/api-v2
+  frontend:
+    origin: https://github.com/org/frontend.git
+    branch: feature/api-v2
+```
+
+### Create a project from a template
+
+Recreates a project from an exported (or hand-written) template file. Repos with git URL origins are cloned automatically; repos with local paths are resolved or looked up in your configured `base-dir`.
+
+```bash
+palette from api-redesign.palette.yaml
+
+# Override the project name
+palette from api-redesign.palette.yaml --name my-api-work
+
+# Override base directory for this run only
+palette from api-redesign.palette.yaml --base-dir ~/code
+```
+
+---
+
 ## Configuration
+
+### Global settings
+
+```bash
+# Set the default directory where repos are cloned when using `palette from`
+palette config set base-dir ~/code
+
+# View current settings
+palette config
+```
+
+Settings are stored at `~/palette/.settings.yaml`.
+
+### Project config
 
 Each project has a `.palette.yaml` inside its directory:
 
@@ -160,6 +218,8 @@ By default palette stores projects in `~/palette`. Override with an environment 
 ```bash
 export PALETTE_HOME=~/projects
 ```
+
+---
 
 ## How worktrees work
 

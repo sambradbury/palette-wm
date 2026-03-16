@@ -1,9 +1,11 @@
-import { resolve, basename } from "node:path";
+import { resolve } from "node:path";
 import { existsSync } from "node:fs";
 import { readConfig, writeConfig } from "../lib/config.js";
-import { addWorktree, resolveRepoName, isGitRepo } from "../lib/git.js";
+import { addWorktree, resolveRepoName, isGitRepo, getRemoteUrl } from "../lib/git.js";
 import { generateWorkspaceFile } from "../lib/workspace.js";
 import { getProjectDir } from "../lib/paths.js";
+import { copyFiles, runInstall } from "../lib/setup.js";
+import { readSettings } from "../lib/settings.js";
 
 interface AddOptions {
   branch?: string;
@@ -21,6 +23,15 @@ export function addCommand(projectName: string, repoPath: string, options: AddOp
 
   if (!isGitRepo(resolvedRepo)) {
     console.error(`Not a git repository: ${resolvedRepo}`);
+    process.exit(1);
+  }
+
+  let origin: string;
+  try {
+    origin = getRemoteUrl(resolvedRepo);
+  } catch {
+    console.error(`Repo at ${resolvedRepo} has no remote URL.`);
+    console.error(`Add a remote first: git -C ${resolvedRepo} remote add origin <url>`);
     process.exit(1);
   }
 
@@ -44,7 +55,11 @@ export function addCommand(projectName: string, repoPath: string, options: AddOp
   console.log(`Adding worktree for "${repoName}" on branch "${branch}"...`);
   addWorktree(resolvedRepo, worktreePath, branch);
 
-  config.repos[repoName] = { origin: resolvedRepo, branch };
+  const settings = readSettings();
+  copyFiles(resolvedRepo, worktreePath, settings.copy ?? []);
+  if (settings.install) runInstall(worktreePath);
+
+  config.repos[repoName] = { origin, branch };
   writeConfig(config);
   generateWorkspaceFile(config);
 

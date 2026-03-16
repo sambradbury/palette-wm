@@ -10,6 +10,9 @@ import { removeCommand } from "./commands/remove.js";
 import { deleteCommand } from "./commands/delete.js";
 import { syncCommand } from "./commands/sync.js";
 import { saveCommand } from "./commands/save.js";
+import { fromCommand } from "./commands/from.js";
+import { exportCommand } from "./commands/export.js";
+import { configCommand } from "./commands/config.js";
 
 const require = createRequire(import.meta.url);
 const { version } = require("../package.json");
@@ -72,5 +75,22 @@ program
   .command("save <project>")
   .description("Snapshot current branch state back into .palette.yaml")
   .action(saveCommand);
+
+program
+  .command("from <template-file>")
+  .description("Create a project from a .palette.yaml template file")
+  .option("-n, --name <name>", "Override the project name")
+  .option("--base-dir <path>", "Override the configured base directory for repo clones")
+  .action(fromCommand);
+
+program
+  .command("export <project> [output-file]")
+  .description("Export a project to a shareable .palette.yaml template with remote URLs")
+  .action(exportCommand);
+
+program
+  .command("config [subcommand] [key] [value]")
+  .description("Manage palette settings (e.g. palette config set base-dir ~/code)")
+  .action(configCommand);
 
 program.parse();

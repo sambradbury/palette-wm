@@ -1,6 +1,6 @@
 import { execSync, spawnSync } from "node:child_process";
-import { existsSync } from "node:fs";
-import { basename, resolve } from "node:path";
+import { existsSync, readdirSync } from "node:fs";
+import { basename, dirname, join, resolve } from "node:path";
 
 export interface GitStatus {
   branch: string;
@@ -17,6 +17,10 @@ function tryRun(cmd: string, cwd?: string): string | null {
   const result = spawnSync(cmd, { cwd, encoding: "utf8", shell: true });
   if (result.status !== 0) return null;
   return result.stdout.trim();
+}
+
+export function isGitUrl(origin: string): boolean {
+  return /^(https?:\/\/|git@|git:\/\/|ssh:\/\/)/.test(origin);
 }
 
 export function resolveRepoName(repoPath: string): string {
@@ -70,10 +74,20 @@ export function addWorktree(originPath: string, worktreePath: string, branch: st
   }
 }
 
-export function removeWorktree(originPath: string, worktreePath: string, force = false): void {
-  const resolvedOrigin = resolve(originPath);
+/**
+ * Returns the root directory of the main repository that owns a given worktree.
+ * Works from any worktree path — no need to know base_dir.
+ */
+export function getMainRepoPath(worktreePath: string): string {
+  const gitCommonDir = run("git rev-parse --git-common-dir", worktreePath);
+  // gitCommonDir is e.g. /path/to/main/.git — its parent is the main repo root
+  return dirname(resolve(worktreePath, gitCommonDir));
+}
+
+export function removeWorktree(worktreePath: string, force = false): void {
+  const mainRepo = getMainRepoPath(worktreePath);
   const forceFlag = force ? " --force" : "";
-  run(`git worktree remove "${worktreePath}"${forceFlag}`, resolvedOrigin);
+  run(`git worktree remove "${worktreePath}"${forceFlag}`, mainRepo);
 }
 
 export function getStatus(worktreePath: string): GitStatus {
@@ -99,4 +113,42 @@ export function getStatus(worktreePath: string): GitStatus {
 
 export function pullWorktree(worktreePath: string): void {
   run("git pull", worktreePath);
+}
+
+export function getRemoteUrl(repoPath: string): string {
+  return run("git remote get-url origin", repoPath);
+}
+
+export function cloneRepo(remoteUrl: string, targetPath: string): void {
+  execSync(`git clone "${remoteUrl}" "${targetPath}"`, { stdio: "inherit" });
+}
+
+function normalizeRemoteUrl(url: string): string {
+  return url.trim().replace(/\.git$/, "");
+}
+
+/**
+ * Scan immediate subdirectories of `baseDir` for a git repo whose origin remote
+ * URL matches `remoteUrl`. Returns the path of the first match, or null.
+ */
+export function findRepoByRemoteUrl(baseDir: string, remoteUrl: string): string | null {
+  if (!existsSync(baseDir)) return null;
+  const normalized = normalizeRemoteUrl(remoteUrl);
+  let entries: string[];
+  try {
+    entries = readdirSync(baseDir, { withFileTypes: true })
+      .filter((e) => e.isDirectory())
+      .map((e) => e.name);
+  } catch {
+    return null;
+  }
+  for (const name of entries) {
+    const candidate = join(baseDir, name);
+    if (!isGitRepo(candidate)) continue;
+    const url = tryRun("git remote get-url origin", candidate);
+    if (url && normalizeRemoteUrl(url) === normalized) {
+      return candidate;
+    }
+  }
+  return null;
 }
