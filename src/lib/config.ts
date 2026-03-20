@@ -3,7 +3,7 @@ import yaml from "js-yaml";
 import { getConfigPath } from "./paths.js";
 
 export interface RepoConfig {
-  origin: string;
+  origin: string; // git remote URL
   branch: string;
 }
 

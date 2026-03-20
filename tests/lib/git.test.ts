@@ -80,7 +80,7 @@ describe("git", () => {
       expect(isGitRepo(worktreePath)).toBe(true);
       expect(currentBranch(worktreePath)).toBe("feature/test-branch");
 
-      removeWorktree(repoPath, worktreePath);
+      removeWorktree(worktreePath);
 
       // Directory should be gone after clean removal
       expect(existsSync(worktreePath)).toBe(false);
@@ -102,7 +102,7 @@ describe("git", () => {
       expect(status.branch).toBe("feature/status-test");
       expect(status.dirty).toBe(false);
 
-      removeWorktree(repoPath, worktreePath);
+      removeWorktree(worktreePath);
     });
 
     test("reports dirty when there are uncommitted changes", () => {
@@ -114,7 +114,7 @@ describe("git", () => {
       const status = getStatus(worktreePath);
       expect(status.dirty).toBe(true);
 
-      removeWorktree(repoPath, worktreePath, true);
+      removeWorktree(worktreePath, true);
     });
   });
 });

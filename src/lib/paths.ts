@@ -16,3 +16,7 @@ export function getConfigPath(projectName: string): string {
 export function getWorkspacePath(projectName: string): string {
   return join(getProjectDir(projectName), `${projectName}.code-workspace`);
 }
+
+export function getSettingsPath(): string {
+  return join(getPaletteHome(), ".settings.yaml");
+}

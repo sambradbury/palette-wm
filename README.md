@@ -34,6 +34,20 @@ Because each project is just a directory, every tool works natively:
 - **OpenCode / any terminal tool** — same, just `cd` in
 - **Finder / file explorer** — browse repos as normal directories
 
+### AI agent support
+
+palette ships an `AGENTS.md` file that tells AI coding agents (Claude Code, Cursor, OpenCode, etc.) how to orient themselves inside a palette project. Copy it into your agent's global instructions file so it's always available:
+
+```bash
+# Claude Code
+cat $(npm root -g)/palette-wm/AGENTS.md >> ~/.claude/CLAUDE.md
+
+# Cursor
+cat $(npm root -g)/palette-wm/AGENTS.md >> ~/.cursor/rules
+```
+
+Or paste the contents manually into whichever instructions file your agent reads.
+
 ## Install
 
 ```bash
@@ -68,6 +82,8 @@ palette add api-redesign ~/code/frontend --branch feature/api-v2
 # Override the name used inside the project directory
 palette add api-redesign ~/code/some-long-repo-name --name infra
 ```
+
+The repo must have an `origin` remote configured. palette stores the remote URL in the project config so the project can be exported and recreated elsewhere.
 
 ### Open a project
 
@@ -136,7 +152,80 @@ palette delete api-redesign --force  # ignore uncommitted changes
 palette list
 ```
 
+---
+
+## Sharing projects
+
+### Export a project as a portable template
+
+Generates a `.palette.yaml` template with git remote URLs instead of local paths, so anyone can recreate the project on their own machine:
+
+```bash
+palette export api-redesign
+# writes ./api-redesign.palette.yaml
+
+palette export api-redesign ~/shared/api-redesign.palette.yaml
+```
+
+The exported file looks like:
+
+```yaml
+name: api-redesign
+repos:
+  backend:
+    origin: https://github.com/org/backend.git
+    branch: feature/api-v2
+  frontend:
+    origin: https://github.com/org/frontend.git
+    branch: feature/api-v2
+```
+
+### Create a project from a template
+
+Recreates a project from an exported (or hand-written) template file. Repos are cloned into your configured `base-dir` (required — set it with `palette config set base-dir <path>` or pass `--base-dir` for a one-off override). If a repo with a matching remote URL already exists in `base-dir`, it's reused instead of re-cloned.
+
+```bash
+palette from api-redesign.palette.yaml
+
+# Override the project name
+palette from api-redesign.palette.yaml --name my-api-work
+
+# Override base directory for this run only
+palette from api-redesign.palette.yaml --base-dir ~/code
+```
+
+---
+
 ## Configuration
+
+### Global settings
+
+```bash
+# Set the default directory where repos are looked up or cloned when using `palette from`
+# Also creates a symlink at <base-dir>/palette pointing to the palette data folder
+palette config set base-dir ~/code
+
+# Copy files matching a pattern into each new worktree (run multiple times to add more)
+# Applies to both `palette add` and `palette from`
+palette config set copy .env
+palette config set copy .env.local
+
+# Remove a copy pattern
+palette config unset copy .env.local
+
+# Automatically run the package manager install after creating a worktree
+# Detects: bun (bun.lockb) > pnpm (pnpm-lock.yaml) > yarn (yarn.lock) > npm
+palette config set install true
+
+# View current settings
+palette config
+```
+
+Settings are stored at `~/palette/.settings.yaml`.
+
+Copy patterns are matched against files in the **top-level** of the origin repo directory. Glob-style wildcards are supported (e.g. `.env*`, `*.local`). Files are only copied if they don't already exist in the worktree.
+
+### Project config
 
 Each project has a `.palette.yaml` inside its directory:
 
@@ -160,6 +249,8 @@ By default palette stores projects in `~/palette`. Override with an environment 
 ```bash
 export PALETTE_HOME=~/projects
 ```
+
+---
 
 ## How worktrees work
 
