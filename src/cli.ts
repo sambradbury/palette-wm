@@ -90,7 +90,37 @@ program
 
 program
   .command("config [subcommand] [key] [value]")
-  .description("Manage palette settings (e.g. palette config set base-dir ~/code, palette config set copy .env)")
+  .description("View or modify palette settings")
+  .addHelpText(
+    "after",
+    `
+Subcommands:
+  (none)               Show all current settings
+  set <key> <value>    Set a config value
+  unset <key> <value>  Remove a value (for list settings like copy)
+
+Keys:
+  base-dir <path>
+    The directory where new git worktrees are created when adding repos to a
+    project. Palette will also create a symlink inside this directory pointing
+    to the palette data folder (~/.palette) for easy browsing.
+    Example: palette config set base-dir ~/code
+
+  copy <pattern>
+    A file glob pattern to copy from the existing worktree into each new
+    worktree when running "palette add". Useful for files that are gitignored
+    but required locally (e.g. .env files, local config). Can be set multiple
+    times to build a list of patterns.
+    Example: palette config set copy .env
+    Example: palette config set copy .env.local
+    Example: palette config unset copy .env
+
+  install <true|false>
+    Whether to automatically run the detected package manager install command
+    (e.g. npm install, bun install) after creating a new worktree. Defaults
+    to false.
+    Example: palette config set install true`
+  )
   .action(configCommand);
 
 program.parse();

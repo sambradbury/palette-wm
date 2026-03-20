@@ -34,6 +34,20 @@ Because each project is just a directory, every tool works natively:
 - **OpenCode / any terminal tool** — same, just `cd` in
 - **Finder / file explorer** — browse repos as normal directories
 
+### AI agent support
+
+palette ships an `AGENTS.md` file that tells AI coding agents (Claude Code, Cursor, OpenCode, etc.) how to orient themselves inside a palette project. Copy it into your agent's global instructions file so it's always available:
+
+```bash
+# Claude Code
+cat $(npm root -g)/palette-wm/AGENTS.md >> ~/.claude/CLAUDE.md
+
+# Cursor
+cat $(npm root -g)/palette-wm/AGENTS.md >> ~/.cursor/rules
+```
+
+Or paste the contents manually into whichever instructions file your agent reads.
+
 ## Install
 
 ```bash
@@ -68,6 +82,8 @@ palette add api-redesign ~/code/frontend --branch feature/api-v2
 # Override the name used inside the project directory
 palette add api-redesign ~/code/some-long-repo-name --name infra
 ```
+
+The repo must have an `origin` remote configured. palette stores the remote URL in the project config so the project can be exported and recreated elsewhere.
 
 ### Open a project
 
@@ -166,7 +182,7 @@ repos:
 
 ### Create a project from a template
 
-Recreates a project from an exported (or hand-written) template file. Repos with git URL origins are cloned automatically; repos with local paths are resolved or looked up in your configured `base-dir`.
+Recreates a project from an exported (or hand-written) template file. Repos are cloned into your configured `base-dir` (required — set it with `palette config set base-dir <path>` or pass `--base-dir` for a one-off override). If a repo with a matching remote URL already exists in `base-dir`, it's reused instead of re-cloned.
 
 ```bash
 palette from api-redesign.palette.yaml
@@ -185,10 +201,12 @@ palette from api-redesign.palette.yaml --base-dir ~/code
 ### Global settings
 
 ```bash
-# Set the default directory where repos are cloned when using `palette from`
+# Set the default directory where repos are looked up or cloned when using `palette from`
+# Also creates a symlink at <base-dir>/palette pointing to the palette data folder
 palette config set base-dir ~/code
 
 # Copy files matching a pattern into each new worktree (run multiple times to add more)
+# Applies to both `palette add` and `palette from`
 palette config set copy .env
 palette config set copy .env.local
 
@@ -196,6 +214,7 @@ palette config set copy .env.local
 palette config unset copy .env.local
 
 # Automatically run the package manager install after creating a worktree
+# Detects: bun (bun.lockb) > pnpm (pnpm-lock.yaml) > yarn (yarn.lock) > npm
 palette config set install true
 
 # View current settings
@@ -204,7 +223,7 @@ palette config
 
 Settings are stored at `~/palette/.settings.yaml`.
 
-Copy patterns are matched against files in the origin repo directory. Glob-style wildcards are supported (e.g. `.env*`, `*.local`). Files are only copied if they don't already exist in the worktree.
+Copy patterns are matched against files in the **top-level** of the origin repo directory. Glob-style wildcards are supported (e.g. `.env*`, `*.local`). Files are only copied if they don't already exist in the worktree.
 
 ### Project config
 
