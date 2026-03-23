@@ -1,7 +1,7 @@
 import { join } from "node:path";
 import { existsSync } from "node:fs";
 import { readConfig, writeConfig } from "../lib/config.js";
-import { removeWorktree } from "../lib/git.js";
+import { cleanupLocalBranch, getMainRepoPath, removeWorktree } from "../lib/git.js";
 import { generateWorkspaceFile } from "../lib/workspace.js";
 import { getProjectDir } from "../lib/paths.js";
 
@@ -19,9 +19,14 @@ export function removeCommand(projectName: string, repoName: string, options: Re
 
   const projectDir = getProjectDir(projectName);
   const worktreePath = join(projectDir, repoName);
+  const branch = config.repos[repoName].branch;
+  let mainRepoPath: string | null = null;
+
   if (existsSync(worktreePath)) {
     console.log(`Removing worktree at ${worktreePath}...`);
+
     try {
+      mainRepoPath = getMainRepoPath(worktreePath);
       removeWorktree(worktreePath, options.force);
     } catch (err) {
       if (!options.force) {
@@ -29,6 +34,16 @@ export function removeCommand(projectName: string, repoName: string, options: Re
         console.error((err as Error).message);
         process.exit(1);
       }
+    }
+  }
+
+  if (mainRepoPath) {
+    const result = cleanupLocalBranch(mainRepoPath, branch);
+
+    if (result.status === "deleted") {
+      console.log(`Deleted local branch "${branch}" in ${repoName}.`);
+    } else if (result.status === "kept") {
+      console.log(`Kept local branch "${branch}" in ${repoName} (${result.reason}).`);
     }
   }
 

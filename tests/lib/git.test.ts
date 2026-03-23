@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import { mkdirSync, rmSync, writeFileSync, existsSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { execSync } from "node:child_process";
 import {
@@ -8,12 +8,22 @@ import {
   resolveRepoName,
   currentBranch,
   addWorktree,
+  cleanupLocalBranch,
   removeWorktree,
   getStatus,
 } from "../../src/lib/git.js";
 
 function git(command: string, cwd: string): string {
   return execSync(command, { cwd, encoding: "utf8" }).trim();
+}
+
+function gitSucceeds(command: string, cwd: string): boolean {
+  try {
+    git(command, cwd);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function initRepo(dir: string): void {
@@ -27,7 +37,7 @@ function initRepo(dir: string): void {
 }
 
 function initRemoteRepo(remotePath: string, clonePath: string): void {
-  const seedPath = join(dirname(remotePath), "seed");
+  const seedPath = join(dirname(remotePath), `${basename(remotePath, ".git")}-seed`);
 
   mkdirSync(remotePath, { recursive: true });
   git("git init --bare", remotePath);
@@ -49,8 +59,8 @@ describe("git", () => {
   beforeAll(() => {
     tempDir = join(tmpdir(), `palette-git-test-${Date.now()}`);
     mkdirSync(tempDir, { recursive: true });
-    repoPath = join(tempDir, "origin");
-    initRepo(repoPath);
+    repoPath = join(tempDir, "origin-clone");
+    initRemoteRepo(join(tempDir, "origin.git"), repoPath);
   });
 
   afterAll(() => {
@@ -134,6 +144,25 @@ describe("git", () => {
 
       removeWorktree(worktreePath);
     });
+
+    test("rejects local-only branches that diverge from the remote default base", () => {
+      const remotePath = join(tempDir, "remote-local-only.git");
+      const clonePath = join(tempDir, "clone-local-only");
+      const worktreePath = join(tempDir, "worktree-local-only");
+
+      initRemoteRepo(remotePath, clonePath);
+
+      git("git checkout -b feature/existing-local", clonePath);
+      writeFileSync(join(clonePath, "local-only.txt"), "local branch commit");
+      git("git add .", clonePath);
+      git("git commit -m 'local only branch'", clonePath);
+      git("git checkout main", clonePath);
+
+      expect(() => addWorktree(clonePath, worktreePath, "feature/existing-local")).toThrow(
+        /Local branch "feature\/existing-local" already exists/
+      );
+      expect(existsSync(worktreePath)).toBe(false);
+    });
   });
 
   describe("getStatus", () => {
@@ -158,6 +187,43 @@ describe("git", () => {
       expect(status.dirty).toBe(true);
 
       removeWorktree(worktreePath, true);
+    });
+  });
+
+  describe("cleanupLocalBranch", () => {
+    test("deletes stale local branches that still match the remote default base", () => {
+      const remotePath = join(tempDir, "cleanup-remote.git");
+      const clonePath = join(tempDir, "cleanup-clone");
+
+      initRemoteRepo(remotePath, clonePath);
+      git("git branch feature/reused origin/main", clonePath);
+
+      const result = cleanupLocalBranch(clonePath, "feature/reused");
+
+      expect(result.status).toBe("deleted");
+      expect(gitSucceeds("git show-ref --verify --quiet refs/heads/feature/reused", clonePath)).toBe(
+        false
+      );
+    });
+
+    test("keeps diverged local branches when cleaning up", () => {
+      const remotePath = join(tempDir, "cleanup-diverged-remote.git");
+      const clonePath = join(tempDir, "cleanup-diverged-clone");
+
+      initRemoteRepo(remotePath, clonePath);
+      git("git checkout -b feature/diverged", clonePath);
+      writeFileSync(join(clonePath, "diverged.txt"), "local branch commit");
+      git("git add .", clonePath);
+      git("git commit -m 'diverged branch'", clonePath);
+      git("git checkout main", clonePath);
+
+      const result = cleanupLocalBranch(clonePath, "feature/diverged");
+
+      expect(result.status).toBe("kept");
+      expect(result.reason).toBe("diverged");
+      expect(gitSucceeds("git show-ref --verify --quiet refs/heads/feature/diverged", clonePath)).toBe(
+        true
+      );
     });
   });
 });
