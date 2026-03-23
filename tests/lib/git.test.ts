@@ -1,6 +1,6 @@
 import { describe, test, expect, beforeAll, afterAll } from "bun:test";
 import { mkdirSync, rmSync, writeFileSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { tmpdir } from "node:os";
 import { execSync } from "node:child_process";
 import {
@@ -12,14 +12,34 @@ import {
   getStatus,
 } from "../../src/lib/git.js";
 
+function git(command: string, cwd: string): string {
+  return execSync(command, { cwd, encoding: "utf8" }).trim();
+}
+
 function initRepo(dir: string): void {
   mkdirSync(dir, { recursive: true });
-  execSync("git init", { cwd: dir });
-  execSync("git config user.email test@test.com", { cwd: dir });
-  execSync("git config user.name Test", { cwd: dir });
+  git("git init", dir);
+  git("git config user.email test@test.com", dir);
+  git("git config user.name Test", dir);
   writeFileSync(join(dir, "README.md"), "# test");
-  execSync("git add .", { cwd: dir });
-  execSync("git commit -m 'initial'", { cwd: dir });
+  git("git add .", dir);
+  git("git commit -m 'initial'", dir);
+}
+
+function initRemoteRepo(remotePath: string, clonePath: string): void {
+  const seedPath = join(dirname(remotePath), "seed");
+
+  mkdirSync(remotePath, { recursive: true });
+  git("git init --bare", remotePath);
+
+  initRepo(seedPath);
+  git("git branch -M main", seedPath);
+  git(`git remote add origin \"${remotePath}\"`, seedPath);
+  git("git push -u origin main", seedPath);
+
+  git(`git clone \"${remotePath}\" \"${clonePath}\"`, dirname(remotePath));
+  git("git config user.email test@test.com", clonePath);
+  git("git config user.name Test", clonePath);
 }
 
 describe("git", () => {
@@ -90,6 +110,29 @@ describe("git", () => {
       expect(() =>
         addWorktree(join(tempDir, "nonexistent"), join(tempDir, "wt"), "main")
       ).toThrow();
+    });
+
+    test("creates new branches from the fetched remote default branch", () => {
+      const remotePath = join(tempDir, "remote.git");
+      const clonePath = join(tempDir, "clone");
+      const worktreePath = join(tempDir, "worktree-default-base");
+
+      initRemoteRepo(remotePath, clonePath);
+
+      git("git checkout -b local-only-base", clonePath);
+      writeFileSync(join(clonePath, "local-only.txt"), "local branch commit");
+      git("git add .", clonePath);
+      git("git commit -m 'local only base'", clonePath);
+
+      const defaultBranchHead = git("git rev-parse origin/main", clonePath);
+
+      addWorktree(clonePath, worktreePath, "feature/from-default");
+
+      expect(currentBranch(worktreePath)).toBe("feature/from-default");
+      expect(git("git rev-parse HEAD", worktreePath)).toBe(defaultBranchHead);
+      expect(git("git rev-parse HEAD", clonePath)).not.toBe(defaultBranchHead);
+
+      removeWorktree(worktreePath);
     });
   });
 
