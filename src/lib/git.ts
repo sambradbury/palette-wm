@@ -42,6 +42,19 @@ export function currentBranch(repoPath: string): string {
   return run("git rev-parse --abbrev-ref HEAD", repoPath);
 }
 
+function getRemoteDefaultBranch(repoPath: string): string | null {
+  const output = tryRun("git ls-remote --symref origin HEAD", repoPath);
+  if (!output) return null;
+
+  const headLine = output.split("\n").find((line) => line.startsWith("ref: "));
+  const match = headLine?.match(/^ref:\s+refs\/heads\/(.+)\s+HEAD$/);
+  return match?.[1] ?? null;
+}
+
+function fetchRemoteBranch(repoPath: string, branch: string): void {
+  run(`git fetch origin ${branch}`, repoPath);
+}
+
 export function addWorktree(originPath: string, worktreePath: string, branch: string): void {
   const resolvedOrigin = resolve(originPath);
 
@@ -53,21 +66,26 @@ export function addWorktree(originPath: string, worktreePath: string, branch: st
     throw new Error(`Not a git repository: ${resolvedOrigin}`);
   }
 
-  // Check if branch exists locally
   const branchExists = tryRun(`git show-ref --verify --quiet refs/heads/${branch}`, resolvedOrigin);
 
   if (branchExists === null) {
-    // Try to track from remote
-    const remoteExists = tryRun(
-      `git show-ref --verify --quiet refs/remotes/origin/${branch}`,
-      resolvedOrigin
-    );
+    const remoteExists = tryRun(`git ls-remote --exit-code --heads origin ${branch}`, resolvedOrigin);
 
     if (remoteExists !== null) {
+      fetchRemoteBranch(resolvedOrigin, branch);
       run(`git worktree add "${worktreePath}" --track -b ${branch} origin/${branch}`, resolvedOrigin);
     } else {
-      // Create new branch at HEAD
-      run(`git worktree add -b ${branch} "${worktreePath}"`, resolvedOrigin);
+      const defaultBranch = getRemoteDefaultBranch(resolvedOrigin);
+
+      if (defaultBranch) {
+        fetchRemoteBranch(resolvedOrigin, defaultBranch);
+        run(
+          `git worktree add -b ${branch} "${worktreePath}" origin/${defaultBranch}`,
+          resolvedOrigin
+        );
+      } else {
+        run(`git worktree add -b ${branch} "${worktreePath}"`, resolvedOrigin);
+      }
     }
   } else {
     run(`git worktree add "${worktreePath}" ${branch}`, resolvedOrigin);
