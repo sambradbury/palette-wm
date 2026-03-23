@@ -53,7 +53,14 @@ export function addCommand(projectName: string, repoPath: string, options: AddOp
   const branch = options.branch ?? projectName;
 
   console.log(`Adding worktree for "${repoName}" on branch "${branch}"...`);
-  addWorktree(resolvedRepo, worktreePath, branch);
+  try {
+    addWorktree(resolvedRepo, worktreePath, branch);
+  } catch (error) {
+    console.error(
+      error instanceof Error ? error.message : `Failed to add worktree for "${repoName}".`
+    );
+    process.exit(1);
+  }
 
   const settings = readSettings();
   copyFiles(resolvedRepo, worktreePath, settings.copy ?? []);

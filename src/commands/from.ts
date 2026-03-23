@@ -80,7 +80,14 @@ export function fromCommand(templateFile: string, options: FromOptions): void {
 
     const worktreePath = join(projectDir, repoName);
     console.log(`Adding worktree for "${repoName}" on branch "${branch}"...`);
-    addWorktree(localPath, worktreePath, branch);
+    try {
+      addWorktree(localPath, worktreePath, branch);
+    } catch (error) {
+      console.error(
+        error instanceof Error ? error.message : `Failed to add worktree for "${repoName}".`
+      );
+      process.exit(1);
+    }
 
     copyFiles(localPath, worktreePath, settings.copy ?? []);
     if (settings.install) runInstall(worktreePath);
