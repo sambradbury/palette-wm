@@ -54,9 +54,14 @@ describe("paths", () => {
   });
 
   describe("getAgentsPath", () => {
-    test("returns AGENTS.md inside project dir", () => {
+    test("returns AGENTS.md inside project dir by default", () => {
       process.env.PALETTE_HOME = "/test/home";
       expect(getAgentsPath("myproject")).toBe("/test/home/myproject/AGENTS.md");
+    });
+
+    test("returns custom filename when provided", () => {
+      process.env.PALETTE_HOME = "/test/home";
+      expect(getAgentsPath("myproject", "CLAUDE.md")).toBe("/test/home/myproject/CLAUDE.md");
     });
   });
 });

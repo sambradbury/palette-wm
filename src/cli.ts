@@ -28,6 +28,7 @@ program
   .command("init <name>")
   .description("Create a new project")
   .option("-i, --instructions <text>", "Custom agent instructions for this project's AGENTS.md")
+  .option("--agent-file <filename>", "Filename for the generated agent instructions (default: AGENTS.md)")
   .action(initCommand);
 
 program
@@ -123,10 +124,16 @@ Keys:
     Example: palette config set install true
 
   agent-instructions <text>
-    Custom instructions to include in the AGENTS.md file generated inside
-    every palette project directory. These appear under a "Global instructions"
-    heading and are useful for team conventions or coding standards.
-    Example: palette config set agent-instructions "Always use TypeScript strict mode"`
+    Custom instructions to include in the agent instructions file generated
+    inside every palette project directory. These appear under a "Global
+    instructions" heading and are useful for team conventions or coding standards.
+    Example: palette config set agent-instructions "Always use TypeScript strict mode"
+
+  agent-file <filename>
+    The filename for the generated agent instructions file inside each project
+    directory. Defaults to AGENTS.md. Can be overridden per-project with
+    --agent-file on palette init.
+    Example: palette config set agent-file CLAUDE.md`
   )
   .action(configCommand);
 

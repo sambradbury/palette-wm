@@ -11,6 +11,7 @@ export interface ProjectConfig {
   name: string;
   repos: Record<string, RepoConfig>;
   instructions?: string;
+  agent_file?: string;
 }
 
 export function readConfig(projectName: string): ProjectConfig {

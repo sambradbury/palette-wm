@@ -97,8 +97,20 @@ export function configCommand(subcommand?: string, key?: string, value?: string)
       return;
     }
 
+    if (key === "agent-file") {
+      if (!value) {
+        console.error("Usage: palette config set agent-file <filename>");
+        process.exit(1);
+      }
+      const settings = readSettings();
+      settings.agent_file = value;
+      writeSettings(settings);
+      console.log(`Set agent-file to ${value}`);
+      return;
+    }
+
     console.error(`Unknown key: ${key}`);
-    console.error("Available keys: base-dir, copy, install, agent-instructions");
+    console.error("Available keys: base-dir, copy, install, agent-instructions, agent-file");
     process.exit(1);
   }
 
@@ -128,8 +140,16 @@ export function configCommand(subcommand?: string, key?: string, value?: string)
       return;
     }
 
+    if (key === "agent-file") {
+      const settings = readSettings();
+      delete settings.agent_file;
+      writeSettings(settings);
+      console.log("Removed agent-file (will default to AGENTS.md)");
+      return;
+    }
+
     console.error(`Unknown key: ${key}`);
-    console.error("Available keys: copy, agent-instructions");
+    console.error("Available keys: copy, agent-instructions, agent-file");
     process.exit(1);
   }
 

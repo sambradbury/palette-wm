@@ -7,6 +7,7 @@ export interface PaletteSettings {
   copy?: string[];
   install?: boolean;
   agent_instructions?: string;
+  agent_file?: string;
 }
 
 export function readSettings(): PaletteSettings {

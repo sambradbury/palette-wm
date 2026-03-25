@@ -10,9 +10,10 @@ This project uses **palette** to manage multi-repo workspaces via git worktrees.
   <repo-b>/        ← git worktree of another repo on the same branch
   .palette.yaml    ← project config (repos + branches)
   <project>.code-workspace
+  AGENTS.md        ← auto-generated agent instructions (repos, branches, commands)
 ```
 
-When you are inside a project directory, each subdirectory is a fully independent git repo. Run git commands directly inside them.
+When you are inside a project directory, each subdirectory is a fully independent git repo. Run git commands directly inside them. Each project has an auto-generated agent instructions file (default `AGENTS.md`, configurable via `palette config set agent-file <name>`) describing the specific repos, branches, and any custom instructions for that project.
 
 ## Useful commands during normal work
 

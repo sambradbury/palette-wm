@@ -6,6 +6,7 @@ import { generateAgentsFile } from "../lib/agents.js";
 
 interface InitOptions {
   instructions?: string;
+  agentFile?: string;
 }
 
 export function initCommand(projectName: string, options: InitOptions): void {
@@ -26,6 +27,7 @@ export function initCommand(projectName: string, options: InitOptions): void {
     name: projectName,
     repos: {},
     ...(options.instructions ? { instructions: options.instructions } : {}),
+    ...(options.agentFile ? { agent_file: options.agentFile } : {}),
   };
   writeConfig(config);
   generateWorkspaceFile(config);

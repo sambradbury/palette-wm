@@ -2,6 +2,7 @@ import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { mkdirSync, rmSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
+import { existsSync } from "node:fs";
 import { generateAgentsFile } from "../../src/lib/agents.js";
 import { getAgentsPath } from "../../src/lib/paths.js";
 import { writeSettings } from "../../src/lib/settings.js";
@@ -110,5 +111,40 @@ describe("agents", () => {
 
     const content = readFileSync(getAgentsPath("proj"), "utf8");
     expect(content).not.toContain("## Project instructions");
+  });
+
+  test("uses custom filename from project config", () => {
+    mkdirSync(join(tempHome, "proj"));
+    generateAgentsFile({ name: "proj", repos: {}, agent_file: "CLAUDE.md" });
+
+    expect(existsSync(getAgentsPath("proj", "CLAUDE.md"))).toBe(true);
+    expect(existsSync(getAgentsPath("proj"))).toBe(false);
+  });
+
+  test("uses custom filename from global settings", () => {
+    mkdirSync(join(tempHome, "proj"));
+    writeSettings({ agent_file: ".cursorrules" });
+    generateAgentsFile({ name: "proj", repos: {} });
+
+    expect(existsSync(getAgentsPath("proj", ".cursorrules"))).toBe(true);
+    expect(existsSync(getAgentsPath("proj"))).toBe(false);
+  });
+
+  test("project config agent_file overrides global settings", () => {
+    mkdirSync(join(tempHome, "proj"));
+    writeSettings({ agent_file: ".cursorrules" });
+    generateAgentsFile({ name: "proj", repos: {}, agent_file: "CLAUDE.md" });
+
+    expect(existsSync(getAgentsPath("proj", "CLAUDE.md"))).toBe(true);
+    expect(existsSync(getAgentsPath("proj", ".cursorrules"))).toBe(false);
+  });
+
+  test("defaults to AGENTS.md when no agent_file configured", () => {
+    mkdirSync(join(tempHome, "proj"));
+    generateAgentsFile({ name: "proj", repos: {} });
+
+    expect(existsSync(getAgentsPath("proj"))).toBe(true);
+    const content = readFileSync(getAgentsPath("proj"), "utf8");
+    expect(content).toContain("# proj");
   });
 });

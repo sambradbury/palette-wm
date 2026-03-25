@@ -5,8 +5,9 @@ import type { ProjectConfig } from "./config.js";
 
 export function generateAgentsFile(config: ProjectConfig): void {
   const settings = readSettings();
+  const filename = config.agent_file ?? settings.agent_file;
   const content = buildAgentsContent(config, settings.agent_instructions);
-  writeFileSync(getAgentsPath(config.name), content, "utf8");
+  writeFileSync(getAgentsPath(config.name, filename), content, "utf8");
 }
 
 function buildAgentsContent(config: ProjectConfig, globalInstructions?: string): string {

@@ -17,8 +17,10 @@ export function getWorkspacePath(projectName: string): string {
   return join(getProjectDir(projectName), `${projectName}.code-workspace`);
 }
 
-export function getAgentsPath(projectName: string): string {
-  return join(getProjectDir(projectName), "AGENTS.md");
+const DEFAULT_AGENT_FILE = "AGENTS.md";
+
+export function getAgentsPath(projectName: string, filename?: string): string {
+  return join(getProjectDir(projectName), filename ?? DEFAULT_AGENT_FILE);
 }
 
 export function getSettingsPath(): string {
