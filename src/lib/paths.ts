@@ -17,6 +17,10 @@ export function getWorkspacePath(projectName: string): string {
   return join(getProjectDir(projectName), `${projectName}.code-workspace`);
 }
 
+export function getAgentsPath(projectName: string): string {
+  return join(getProjectDir(projectName), "AGENTS.md");
+}
+
 export function getSettingsPath(): string {
   return join(getPaletteHome(), ".settings.yaml");
 }

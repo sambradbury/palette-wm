@@ -85,8 +85,20 @@ export function configCommand(subcommand?: string, key?: string, value?: string)
       return;
     }
 
+    if (key === "agent-instructions") {
+      if (!value) {
+        console.error("Usage: palette config set agent-instructions <text>");
+        process.exit(1);
+      }
+      const settings = readSettings();
+      settings.agent_instructions = value;
+      writeSettings(settings);
+      console.log("Set agent-instructions");
+      return;
+    }
+
     console.error(`Unknown key: ${key}`);
-    console.error("Available keys: base-dir, copy, install");
+    console.error("Available keys: base-dir, copy, install, agent-instructions");
     process.exit(1);
   }
 
@@ -108,8 +120,16 @@ export function configCommand(subcommand?: string, key?: string, value?: string)
       return;
     }
 
+    if (key === "agent-instructions") {
+      const settings = readSettings();
+      delete settings.agent_instructions;
+      writeSettings(settings);
+      console.log("Removed agent-instructions");
+      return;
+    }
+
     console.error(`Unknown key: ${key}`);
-    console.error("Available keys: copy");
+    console.error("Available keys: copy, agent-instructions");
     process.exit(1);
   }
 

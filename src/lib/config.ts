@@ -10,6 +10,7 @@ export interface RepoConfig {
 export interface ProjectConfig {
   name: string;
   repos: Record<string, RepoConfig>;
+  instructions?: string;
 }
 
 export function readConfig(projectName: string): ProjectConfig {

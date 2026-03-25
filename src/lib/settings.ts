@@ -6,6 +6,7 @@ export interface PaletteSettings {
   base_dir?: string;
   copy?: string[];
   install?: boolean;
+  agent_instructions?: string;
 }
 
 export function readSettings(): PaletteSettings {

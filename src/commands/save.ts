@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import { existsSync } from "node:fs";
 import { readConfig, writeConfig } from "../lib/config.js";
+import { generateAgentsFile } from "../lib/agents.js";
 import { currentBranch } from "../lib/git.js";
 import { getProjectDir } from "../lib/paths.js";
 
@@ -33,6 +34,7 @@ export function saveCommand(projectName: string): void {
 
   if (changed) {
     writeConfig(config);
+    generateAgentsFile(config);
     console.log(`\nSaved branch state to .palette.yaml`);
   } else {
     console.log(`\nNo changes to save.`);

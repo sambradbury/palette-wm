@@ -27,6 +27,7 @@ program
 program
   .command("init <name>")
   .description("Create a new project")
+  .option("-i, --instructions <text>", "Custom agent instructions for this project's AGENTS.md")
   .action(initCommand);
 
 program
@@ -119,7 +120,13 @@ Keys:
     Whether to automatically run the detected package manager install command
     (e.g. npm install, bun install) after creating a new worktree. Defaults
     to false.
-    Example: palette config set install true`
+    Example: palette config set install true
+
+  agent-instructions <text>
+    Custom instructions to include in the AGENTS.md file generated inside
+    every palette project directory. These appear under a "Global instructions"
+    heading and are useful for team conventions or coding standards.
+    Example: palette config set agent-instructions "Always use TypeScript strict mode"`
   )
   .action(configCommand);
 

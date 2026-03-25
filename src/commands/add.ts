@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import { readConfig, writeConfig } from "../lib/config.js";
 import { addWorktree, resolveRepoName, isGitRepo, getRemoteUrl } from "../lib/git.js";
 import { generateWorkspaceFile } from "../lib/workspace.js";
+import { generateAgentsFile } from "../lib/agents.js";
 import { getProjectDir } from "../lib/paths.js";
 import { copyFiles, runInstall } from "../lib/setup.js";
 import { readSettings } from "../lib/settings.js";
@@ -69,6 +70,7 @@ export function addCommand(projectName: string, repoPath: string, options: AddOp
   config.repos[repoName] = { origin, branch };
   writeConfig(config);
   generateWorkspaceFile(config);
+  generateAgentsFile(config);
 
   console.log(`Added "${repoName}" to project "${projectName}".`);
 }

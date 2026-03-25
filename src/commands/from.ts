@@ -3,6 +3,7 @@ import { resolve, join } from "node:path";
 import yaml from "js-yaml";
 import { writeConfig, configExists } from "../lib/config.js";
 import { generateWorkspaceFile } from "../lib/workspace.js";
+import { generateAgentsFile } from "../lib/agents.js";
 import { addWorktree, isGitRepo, cloneRepo, findRepoByRemoteUrl } from "../lib/git.js";
 import { getProjectDir, getPaletteHome } from "../lib/paths.js";
 import { readSettings } from "../lib/settings.js";
@@ -97,6 +98,7 @@ export function fromCommand(templateFile: string, options: FromOptions): void {
 
   writeConfig(config);
   generateWorkspaceFile(config);
+  generateAgentsFile(config);
 
   console.log(`Created project "${projectName}" at ${projectDir}`);
 }
