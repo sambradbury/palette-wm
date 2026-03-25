@@ -13,6 +13,7 @@ import { saveCommand } from "./commands/save.js";
 import { fromCommand } from "./commands/from.js";
 import { exportCommand } from "./commands/export.js";
 import { configCommand } from "./commands/config.js";
+import { execCommand } from "./commands/exec.js";
 
 const require = createRequire(import.meta.url);
 const { version } = require("../package.json");
@@ -137,4 +138,13 @@ Keys:
   )
   .action(configCommand);
 
-program.parse();
+const knownCommands = new Set(
+  program.commands.flatMap((c) => [c.name(), ...c.aliases()])
+);
+
+const firstArg = process.argv[2];
+if (firstArg && !firstArg.startsWith("-") && !knownCommands.has(firstArg)) {
+  execCommand(process.argv.slice(2));
+} else {
+  program.parse();
+}

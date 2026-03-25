@@ -168,6 +168,31 @@ palette delete api-redesign --force  # ignore uncommitted changes
 palette list
 ```
 
+### Run commands across all repos
+
+From inside any palette project directory, any unrecognized command is executed in every repo:
+
+```bash
+cd ~/palette/api-redesign
+
+palette git status
+palette git commit -m "chore: update deps"
+palette npm install
+palette bun test
+```
+
+Output is grouped by repo:
+
+```
+backend/
+<git status output>
+
+frontend/
+<git status output>
+```
+
+If a command fails in any repo, palette continues running it in the remaining repos and exits with a non-zero status.
+
 ---
 
 ## Sharing projects

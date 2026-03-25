@@ -26,6 +26,11 @@ palette sync <project>
 
 # After manually switching branches inside the project, persist the new branches to config
 palette save <project>
+
+# Run any command across all repos in the current project (from inside a project directory)
+palette git status
+palette git commit -m "chore: update deps"
+palette npm install
 ```
 
 ## Project management

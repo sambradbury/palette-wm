@@ -1,5 +1,6 @@
+import { existsSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
+import { basename, dirname, join } from "node:path";
 
 export function getPaletteHome(): string {
   return process.env.PALETTE_HOME ?? join(homedir(), "palette");
@@ -25,4 +26,16 @@ export function getAgentsPath(projectName: string, filename?: string): string {
 
 export function getSettingsPath(): string {
   return join(getPaletteHome(), ".settings.yaml");
+}
+
+export function detectProject(): string | null {
+  let dir = process.cwd();
+  while (true) {
+    if (existsSync(join(dir, ".palette.yaml"))) {
+      return basename(dir);
+    }
+    const parent = dirname(dir);
+    if (parent === dir) return null;
+    dir = parent;
+  }
 }
