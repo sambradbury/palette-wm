@@ -1,14 +1,25 @@
 import { join } from "node:path";
 import { existsSync, rmSync } from "node:fs";
+import { createInterface } from "node:readline";
 import { readConfig } from "../lib/config.js";
-import { cleanupLocalBranch, getMainRepoPath, removeWorktree } from "../lib/git.js";
+import { cleanupLocalBranch, forceDeleteLocalBranch, getMainRepoPath, removeWorktree } from "../lib/git.js";
 import { getProjectDir } from "../lib/paths.js";
 
 interface DeleteOptions {
   force?: boolean;
 }
 
-export function deleteCommand(projectName: string, options: DeleteOptions): void {
+async function promptYesNo(question: string): Promise<boolean> {
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  return new Promise((resolve) => {
+    rl.question(`${question} (y/N) `, (answer) => {
+      rl.close();
+      resolve(answer.toLowerCase() === "y");
+    });
+  });
+}
+
+export async function deleteCommand(projectName: string, options: DeleteOptions): Promise<void> {
   const config = readConfig(projectName);
   const projectDir = getProjectDir(projectName);
 
@@ -26,7 +37,19 @@ export function deleteCommand(projectName: string, options: DeleteOptions): void
       if (result.status === "deleted") {
         console.log(`Deleted local branch "${repoConfig.branch}" in ${repoName}.`);
       } else if (result.status === "kept") {
-        console.log(`Kept local branch "${repoConfig.branch}" in ${repoName} (${result.reason}).`);
+        if (result.reason === "diverged") {
+          const confirmed = await promptYesNo(
+            `Local branch "${repoConfig.branch}" in ${repoName} has diverged from remote. Force delete?`
+          );
+          if (confirmed) {
+            forceDeleteLocalBranch(mainRepoPath, repoConfig.branch);
+            console.log(`Force deleted local branch "${repoConfig.branch}" in ${repoName}.`);
+          } else {
+            console.log(`Kept local branch "${repoConfig.branch}" in ${repoName}.`);
+          }
+        } else {
+          console.log(`Kept local branch "${repoConfig.branch}" in ${repoName} (${result.reason}).`);
+        }
       }
     } catch (err) {
       if (!options.force) {

@@ -160,6 +160,11 @@ export function cleanupLocalBranch(repoPath: string, branch: string): BranchClea
   return { status: "deleted", baseRef };
 }
 
+export function forceDeleteLocalBranch(repoPath: string, branch: string): void {
+  const resolvedRepo = resolve(repoPath);
+  run(`git branch -D "${branch}"`, resolvedRepo);
+}
+
 export function addWorktree(originPath: string, worktreePath: string, branch: string): void {
   const resolvedOrigin = resolve(originPath);
 

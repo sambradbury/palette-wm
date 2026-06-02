@@ -13,6 +13,7 @@ import { saveCommand } from "./commands/save.js";
 import { fromCommand } from "./commands/from.js";
 import { exportCommand } from "./commands/export.js";
 import { configCommand } from "./commands/config.js";
+import { execCommand } from "./commands/exec.js";
 
 const require = createRequire(import.meta.url);
 const { version } = require("../package.json");
@@ -27,6 +28,8 @@ program
 program
   .command("init <name>")
   .description("Create a new project")
+  .option("-i, --instructions <text>", "Custom agent instructions for this project's AGENTS.md")
+  .option("--agent-file <filename>", "Filename for the generated agent instructions (default: AGENTS.md)")
   .action(initCommand);
 
 program
@@ -119,8 +122,29 @@ Keys:
     Whether to automatically run the detected package manager install command
     (e.g. npm install, bun install) after creating a new worktree. Defaults
     to false.
-    Example: palette config set install true`
+    Example: palette config set install true
+
+  agent-instructions <text>
+    Custom instructions to include in the agent instructions file generated
+    inside every palette project directory. These appear under a "Global
+    instructions" heading and are useful for team conventions or coding standards.
+    Example: palette config set agent-instructions "Always use TypeScript strict mode"
+
+  agent-file <filename>
+    The filename for the generated agent instructions file inside each project
+    directory. Defaults to AGENTS.md. Can be overridden per-project with
+    --agent-file on palette init.
+    Example: palette config set agent-file CLAUDE.md`
   )
   .action(configCommand);
 
-program.parse();
+const knownCommands = new Set(
+  program.commands.flatMap((c) => [c.name(), ...c.aliases()])
+);
+
+const firstArg = process.argv[2];
+if (firstArg && !firstArg.startsWith("-") && !knownCommands.has(firstArg)) {
+  execCommand(process.argv.slice(2));
+} else {
+  program.parse();
+}

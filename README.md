@@ -17,12 +17,14 @@ Each project gets its own directory containing **git worktrees** — real, fully
     frontend/         ← worktree of ~/code/frontend on feature/api-v2
     api-redesign.code-workspace
     .palette.yaml
+    AGENTS.md         ← auto-generated agent instructions
 
   bug-fix-sprint/
     backend/          ← worktree of ~/code/backend on fix/auth-regression
     infra/            ← worktree of ~/code/infra on main
     bug-fix-sprint.code-workspace
     .palette.yaml
+    AGENTS.md
 ```
 
 Both projects are live simultaneously. `backend` is checked out at two different branches at once — each project has its own isolated copy. Switch projects by opening a different directory.
@@ -36,17 +38,25 @@ Because each project is just a directory, every tool works natively:
 
 ### AI agent support
 
-palette ships an `AGENTS.md` file that tells AI coding agents (Claude Code, Cursor, OpenCode, etc.) how to orient themselves inside a palette project. Copy it into your agent's global instructions file so it's always available:
+Every palette project directory includes an auto-generated agent instructions file (defaults to `AGENTS.md`) that tells AI coding agents (Claude Code, Cursor, OpenCode, etc.) what the directory contains, which repos and branches are present, and how to use palette commands. This file is regenerated automatically whenever the project changes (adding/removing repos, saving branch state, etc.).
+
+You can customize the generated file with your own instructions and choose the filename:
 
 ```bash
-# Claude Code
-cat $(npm root -g)/palette-wm/AGENTS.md >> ~/.claude/CLAUDE.md
+# Global instructions included in every project's agent file
+palette config set agent-instructions "Always use TypeScript strict mode"
 
-# Cursor
-cat $(npm root -g)/palette-wm/AGENTS.md >> ~/.cursor/rules
+# Per-project instructions set at creation time
+palette init api-redesign --instructions "This project targets the v2 API migration"
+
+# Change the filename globally (default: AGENTS.md)
+palette config set agent-file CLAUDE.md
+
+# Override per-project at creation time
+palette init api-redesign --agent-file CLAUDE.md
 ```
 
-Or paste the contents manually into whichever instructions file your agent reads.
+Per-project instructions and agent file settings are stored in `.palette.yaml` and included when exporting templates, so teammates get the same agent context.
 
 ## Install
 
@@ -68,6 +78,12 @@ bun install -g palette-wm
 
 ```bash
 palette init api-redesign
+
+# With custom agent instructions
+palette init api-redesign --instructions "This project targets the v2 API migration"
+
+# With a custom agent file name (default: AGENTS.md)
+palette init api-redesign --agent-file CLAUDE.md
 ```
 
 ### Add repos to a project
@@ -152,6 +168,31 @@ palette delete api-redesign --force  # ignore uncommitted changes
 palette list
 ```
 
+### Run commands across all repos
+
+From inside any palette project directory, any unrecognized command is executed in every repo:
+
+```bash
+cd ~/palette/api-redesign
+
+palette git status
+palette git commit -m "chore: update deps"
+palette npm install
+palette bun test
+```
+
+Output is grouped by repo:
+
+```
+backend/
+<git status output>
+
+frontend/
+<git status output>
+```
+
+If a command fails in any repo, palette continues running it in the remaining repos and exits with a non-zero status.
+
 ---
 
 ## Sharing projects
@@ -216,6 +257,14 @@ palette config unset copy .env.local
 # Automatically run the package manager install after creating a worktree
 # Detects: bun (bun.lockb) > pnpm (pnpm-lock.yaml) > yarn (yarn.lock) > npm
 palette config set install true
+
+# Set global agent instructions included in every project's agent file
+palette config set agent-instructions "Always use TypeScript strict mode"
+palette config unset agent-instructions
+
+# Change the agent instructions filename (default: AGENTS.md)
+palette config set agent-file CLAUDE.md
+palette config unset agent-file
 
 # View current settings
 palette config

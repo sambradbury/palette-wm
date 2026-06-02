@@ -10,9 +10,10 @@ This project uses **palette** to manage multi-repo workspaces via git worktrees.
   <repo-b>/        ← git worktree of another repo on the same branch
   .palette.yaml    ← project config (repos + branches)
   <project>.code-workspace
+  AGENTS.md        ← auto-generated agent instructions (repos, branches, commands)
 ```
 
-When you are inside a project directory, each subdirectory is a fully independent git repo. Run git commands directly inside them.
+When you are inside a project directory, each subdirectory is a fully independent git repo. Run git commands directly inside them. Each project has an auto-generated agent instructions file (default `AGENTS.md`, configurable via `palette config set agent-file <name>`) describing the specific repos, branches, and any custom instructions for that project.
 
 ## Useful commands during normal work
 
@@ -25,6 +26,11 @@ palette sync <project>
 
 # After manually switching branches inside the project, persist the new branches to config
 palette save <project>
+
+# Run any command across all repos in the current project (from inside a project directory)
+palette git status
+palette git commit -m "chore: update deps"
+palette npm install
 ```
 
 ## Project management

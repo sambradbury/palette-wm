@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import { readConfig, writeConfig } from "../lib/config.js";
 import { cleanupLocalBranch, getMainRepoPath, removeWorktree } from "../lib/git.js";
 import { generateWorkspaceFile } from "../lib/workspace.js";
+import { generateAgentsFile } from "../lib/agents.js";
 import { getProjectDir } from "../lib/paths.js";
 
 interface RemoveOptions {
@@ -50,6 +51,7 @@ export function removeCommand(projectName: string, repoName: string, options: Re
   delete config.repos[repoName];
   writeConfig(config);
   generateWorkspaceFile(config);
+  generateAgentsFile(config);
 
   console.log(`Removed "${repoName}" from project "${projectName}".`);
 }

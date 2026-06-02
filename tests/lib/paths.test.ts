@@ -1,7 +1,13 @@
 import { describe, test, expect, beforeEach, afterEach } from "bun:test";
 import { join } from "node:path";
 import { homedir } from "node:os";
-import { getPaletteHome, getProjectDir, getConfigPath, getWorkspacePath } from "../../src/lib/paths.js";
+import {
+  getPaletteHome,
+  getProjectDir,
+  getConfigPath,
+  getWorkspacePath,
+  getAgentsPath,
+} from "../../src/lib/paths.js";
 
 describe("paths", () => {
   const originalEnv = process.env.PALETTE_HOME;
@@ -44,6 +50,18 @@ describe("paths", () => {
     test("returns <name>.code-workspace inside project dir", () => {
       process.env.PALETTE_HOME = "/test/home";
       expect(getWorkspacePath("myproject")).toBe("/test/home/myproject/myproject.code-workspace");
+    });
+  });
+
+  describe("getAgentsPath", () => {
+    test("returns AGENTS.md inside project dir by default", () => {
+      process.env.PALETTE_HOME = "/test/home";
+      expect(getAgentsPath("myproject")).toBe("/test/home/myproject/AGENTS.md");
+    });
+
+    test("returns custom filename when provided", () => {
+      process.env.PALETTE_HOME = "/test/home";
+      expect(getAgentsPath("myproject", "CLAUDE.md")).toBe("/test/home/myproject/CLAUDE.md");
     });
   });
 });
